@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/__main__.py",
-            "args": ["-i", "testignore"],
+            "args": ["-i", "test/testignore"],
             "console": "integratedTerminal"
         }
     ]

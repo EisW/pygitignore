@@ -99,7 +99,7 @@ class PyGitIgnore:
                     ignored_file = True
                     continue
                 if match_result == MatchResult.EXPLICITE_INCLUDED:
-                    file_include = True
+                    ignored_file = False
                     break
             if not ignored_file:
                 file_include = True
