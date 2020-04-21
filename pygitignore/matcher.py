@@ -87,8 +87,10 @@ class PyGitIgnore:
         return False
 
     def flist(self, sourcedir):
+        print('>====================')
         for p in self._patterns:
             print(p)
+        print('<====================')
         for path in pathlib.Path(sourcedir).glob('**/*'):
             for p in self._patterns:
                 match_result = self.match(p, path)
@@ -161,7 +163,7 @@ def main():
     pgi = PyGitIgnore(ignore_patterns=open(ignorefile, 'r').read())
 
     for f in pgi.flist(sourcedir):
-        print(f)
+        pass
 
 
 
