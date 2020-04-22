@@ -1,0 +1,10 @@
+.
+./build
+./build/logs
+./build/logs/logs
+./build/other
+./build/other/logs
+./logs
+./logs/build
+./logs/monday
+./logs/monday/foo.bar
