@@ -12,4 +12,5 @@ for ignorefile in *-pyignore; do
     ( find . | xargs git check-ignore -vn --no-index ) | grep "^::" | cut -f 2 | grep -v "./.gitignore" | tee ../${prefix}-included
     echo "#####"
     cd -
+    rm root/.gitignore
 done
