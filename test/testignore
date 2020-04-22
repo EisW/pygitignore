@@ -5,4 +5,4 @@
 # Python Dateien einschließen
 !*.py
 
-!ign1
+!ign*
