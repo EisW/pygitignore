@@ -1,8 +1,0 @@
-# Alle Dateien ausschließen
-*
-# Leerzeilen ignorieren
-
-# Python Dateien einschließen
-!*.py
-
-!ign*
