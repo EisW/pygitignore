@@ -6,11 +6,8 @@
 ./build/logs/debuga.log
 ./build/logs/debugab.log
 ./build/logs/debugb.log
-./build/logs/important.log
 ./foo.log
-./important.log
 ./logs/build/debug.log
-./logs/build/important.log
 ./logs/build/trace.log
 ./logs/debug.log
 ./logs/monday/debug.log

@@ -1,10 +1,13 @@
 .
 ./build
 ./build/logs
+./build/logs/important.log
 ./build/logs/logs
 ./build/other
 ./build/other/logs
+./important.log
 ./logs
 ./logs/build
+./logs/build/important.log
 ./logs/monday
 ./logs/monday/foo.bar
