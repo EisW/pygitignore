@@ -17,7 +17,7 @@ def test_match(patterntest):
         'test/' + patterntest + '-excluded', 'r').readlines()]
     testlist = list(pig.flist('test/root'))
     reflist_set = set([str(p) for p in reflist])
-    testlist_set = set([str(p) for p in reflist])
+    testlist_set = set([str(p) for p in testlist])
     more_refs = reflist_set - testlist_set
     less_refs = testlist_set - reflist_set
     assert reflist_set == testlist_set

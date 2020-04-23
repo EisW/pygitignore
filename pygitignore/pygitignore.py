@@ -2,7 +2,6 @@
 import argparse
 import enum
 import fnmatch
-import itertools
 import os
 import pathlib
 import re
@@ -87,8 +86,26 @@ class PyGitIgnore:
         # of the .gitignore file (relative to the toplevel of the work tree if not from
         # a .gitignore file).
         #result = fnmatch.fnmatch(value.split('/')[-1], pattern)
+        matched = False
         if pattern.find('/') == -1:
-            pattern = '**/' + pattern
+            for ppath in pathlib.Path(value).parts:
+                if fnmatch.fnmatch(ppath, pattern):
+                    matched = True
+                    break
+        else:
+            pos = value.find(pattern)
+            if pos != -1:
+                if pos == 0 or value[pos - 1] == '/':
+                    matched = True
+        if matched:
+            if negate:
+                return MatchResult.EXPLICITE_INCLUDED
+            else:
+                return MatchResult.IGNORED_DIR if is_dir else MatchResult.IGNORED_FILE
+        else:
+            return MatchResult.NO_MATCH
+
+
         result = fnmatch.fnmatch(value, pattern)
         if result:
             if negate:
@@ -104,11 +121,10 @@ class PyGitIgnore:
         return False
 
     def flist(self, sourcedir):
-        print('>====================')
-        for p in self._patterns:
-            print(p)
-        print('<====================')
-        for path in itertools.chain([pathlib.Path(sourcedir)], pathlib.Path(sourcedir).rglob('*')):
+        for path in pathlib.Path(sourcedir).rglob('*'):
+            if path.is_dir():
+                # only return files, not dirs
+                continue
             ignored_file = False
             for p in self._patterns:
                 match_result = self.match(p, path)
@@ -126,10 +142,7 @@ class PyGitIgnore:
             else:
                 file_include = False
             if file_include:
-                print('+', path.as_posix())
                 yield path.relative_to(sourcedir)
-            else:
-                print('-', path.as_posix())
 
     def package_filter(self, path):
         file_include = True
