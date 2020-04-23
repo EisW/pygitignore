@@ -1,7 +1,4 @@
-.
-./build
 ./build/bar.log
-./build/logs
 ./build/logs/debug.log
 ./build/logs/debug1.log
 ./build/logs/debug2.log
@@ -11,15 +8,11 @@
 ./build/logs/debugb.log
 ./build/logs/important.log
 ./build/logs/logs
-./build/other
 ./build/other/logs
 ./foo.log
 ./important.log
-./logs
-./logs/build
 ./logs/build/debug.log
 ./logs/build/important.log
 ./logs/build/trace.log
 ./logs/debug.log
-./logs/monday
 ./logs/monday/foo.bar

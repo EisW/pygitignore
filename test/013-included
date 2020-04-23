@@ -1,6 +1,3 @@
-.
-./build
 ./build/bar.log
-./build/other
 ./foo.log
 ./important.log

@@ -7,9 +7,15 @@ for ignorefile in *-pyignore; do
     #echo "## .gitignore:"
     cat .gitignore
     echo "## excluded:"
-    ( find . | xargs git check-ignore -vn --no-index ) | grep -v "^::" |cut -f 2 | grep -v "./.gitignore" | tee ../${prefix}-excluded 
+    ( find . -type f | xargs git check-ignore --no-index ) | grep -v "./.gitignore" | tee ../${prefix}-excluded 
     echo "## included:"
-    ( find . | xargs git check-ignore -vn --no-index ) | grep "^::" | cut -f 2 | grep -v "./.gitignore" | tee ../${prefix}-included
+    for f in $(find . -type f | grep -v "./.gitignore"); do
+        excluded=0
+        while read line; do if [ "$line" == "$f" ]; then excluded=1; fi; done < ../${prefix}-excluded
+        if [ $excluded -eq 0 ]; then
+            echo $f
+        fi
+    done | tee ../${prefix}-included
     echo "#####"
     cd -
     rm root/.gitignore
