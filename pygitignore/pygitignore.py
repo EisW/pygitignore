@@ -2,6 +2,7 @@
 import argparse
 import enum
 import fnmatch
+import itertools
 import os
 import pathlib
 import re
@@ -39,7 +40,7 @@ class PyGitIgnore:
 
     def match(self, pattern: str, value: pathlib.Path) -> MatchResult:
         '''
-        Match matches patterns in the same manner that gitignore does.
+        Match matches single pattern in the same manner that gitignore does.
 
         Reference https://git-scm.com/docs/gitignore.
 
@@ -62,18 +63,33 @@ class PyGitIgnore:
 
         is_dir = True if pattern[-1] == '/' else False
 
+        # todo: replace '[...]' expressions
+
         # Two consecutive asterisks ("**") in patterns matched
         # against full pathname may have special meaning:
         if pattern.find(self.dblAsterisks) != -1:
-            raise ValueError('double asterisk unsupported')
-            #result = self._eval_dbl_asterisk(pattern, value)
-            # return not result if negate else result
+            raise ValueError('double asterisk not supported yet')
+            if pathlib.Path(value).match(pattern):
+                pmatch = True
+            else:
+                pmatch = False
+            res = not pmatch if negate else pmatch
+            if res:
+                if is_dir:
+                    return MatchResult.IGNORED_DIR
+                else:
+                    return MatchResult.IGNORED_FILE
+            else:
+                return MatchResult.EXPLICITE_INCLUDED
 
         # If the pattern does not contain a slash /, Git treats it as a shell glob
         # pattern and checks for a match against the pathname relative to the location
         # of the .gitignore file (relative to the toplevel of the work tree if not from
         # a .gitignore file).
-        result = fnmatch.fnmatch(value.split('/')[-1], pattern)
+        #result = fnmatch.fnmatch(value.split('/')[-1], pattern)
+        if pattern.find('/') == -1:
+            pattern = '**/' + pattern
+        result = fnmatch.fnmatch(value, pattern)
         if result:
             if negate:
                 return MatchResult.EXPLICITE_INCLUDED
@@ -82,6 +98,7 @@ class PyGitIgnore:
                     return MatchResult.IGNORED_DIR
                 else:
                     return MatchResult.IGNORED_FILE
+        return MatchResult.NO_MATCH
 
     def _eval_dbl_asterisk(self, pattern, value):
         return False
@@ -91,7 +108,8 @@ class PyGitIgnore:
         for p in self._patterns:
             print(p)
         print('<====================')
-        for path in pathlib.Path(sourcedir).glob('**/*'):
+        for path in itertools.chain([pathlib.Path(sourcedir)], pathlib.Path(sourcedir).rglob('*')):
+            ignored_file = False
             for p in self._patterns:
                 match_result = self.match(p, path)
                 if match_result == MatchResult.IGNORED_DIR:
@@ -109,10 +127,9 @@ class PyGitIgnore:
                 file_include = False
             if file_include:
                 print('+', path.as_posix())
-                yield path
+                yield path.relative_to(sourcedir)
             else:
                 print('-', path.as_posix())
-
 
     def package_filter(self, path):
         file_include = True

@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "C:\\Users\\winklert\\sb-anaconda3-py3.7\\python.exe",
+    "python.pythonPath": "C:\\sb-anaconda3-py37-1.0.32\\python.exe",
     "python.testing.pytestArgs": [
         "."
     ],
