@@ -87,16 +87,22 @@ class PyGitIgnore:
         # a .gitignore file).
         #result = fnmatch.fnmatch(value.split('/')[-1], pattern)
         matched = False
-        if pattern.find('/') == -1:
-            for ppath in pathlib.Path(value).parts:
-                if fnmatch.fnmatch(ppath, pattern):
-                    matched = True
-                    break
+
+        if (pattern.startswith('/') or
+            pattern[-1] != '/' and pattern.find('/') != -1):
+            parentpat = './'
         else:
-            pos = value.find(pattern)
-            if pos != -1:
-                if pos == 0 or value[pos - 1] == '/':
-                    matched = True
+            parentpat = '**/'
+        subpattern = [pathlib.PurePath(parentpat + pattern + '/**')]
+        if not is_dir:
+            subpattern.append(pathlib.PurePath(parentpat + pattern))
+
+        for pat in subpattern:
+            if fnmatch.fnmatch(value, pat):
+            #if pathlib.PurePosixPath(value).match(pat):
+                matched = True
+                break
+
         if matched:
             if negate:
                 return MatchResult.EXPLICITE_INCLUDED
@@ -129,7 +135,7 @@ class PyGitIgnore:
             for p in self._patterns:
                 match_result = self.match(p, path)
                 if match_result == MatchResult.IGNORED_DIR:
-                    file_include = False
+                    ignored_file = True
                     break
                 if match_result == MatchResult.IGNORED_FILE:
                     ignored_file = True
