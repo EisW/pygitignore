@@ -37,14 +37,14 @@ class PyGitIgnore:
     def add_exclude(self, pattern):
         self._patterns.append('!' + pattern)
 
-    def match(self, pattern: str, value: pathlib.Path) -> MatchResult:
+    def match(self, pattern: str, value: str) -> MatchResult:
         '''
         Match matches single pattern in the same manner that gitignore does.
 
         Reference https://git-scm.com/docs/gitignore.
 
         '''
-        value = value.as_posix()
+
         # strip leading and trailing whitespace
         pattern = pattern.strip()
 
@@ -61,6 +61,7 @@ class PyGitIgnore:
             pattern = pattern[1:].strip()
 
         is_dir = True if pattern[-1] == '/' else False
+
 
         # todo: replace '[...]' expressions
 
@@ -81,27 +82,78 @@ class PyGitIgnore:
             else:
                 return MatchResult.EXPLICITE_INCLUDED
 
+
         # If the pattern does not contain a slash /, Git treats it as a shell glob
         # pattern and checks for a match against the pathname relative to the location
         # of the .gitignore file (relative to the toplevel of the work tree if not from
         # a .gitignore file).
         #result = fnmatch.fnmatch(value.split('/')[-1], pattern)
-        matched = False
 
-        if (pattern.startswith('/') or
-            pattern[-1] != '/' and pattern.find('/') != -1):
-            parentpat = './'
+        root_only = False
+        # if (pattern.startswith('/') or
+        #     pattern[-1] != '/' and pattern.find('/') != -1):
+        #     parentpat = '/'
+        #     root_only = True
+        # else:
+        #     parentpat = '' # '**/'
+        # subpattern = [pathlib.PurePath(parentpat + pattern + '/**')]
+        # if not is_dir:
+        #     subpattern.append(pathlib.PurePath(parentpat + pattern))
+
+        if pattern.startswith('/'):
+            root_only = True
+            pattern = pattern[1:]
+        
+        if pattern.endswith('/'):
+            if pattern[:-1].find('/') != -1:
+                root_only = True
         else:
-            parentpat = '**/'
-        subpattern = [pathlib.PurePath(parentpat + pattern + '/**')]
-        if not is_dir:
-            subpattern.append(pathlib.PurePath(parentpat + pattern))
+            if pattern.find('/') != -1:
+                root_only = True
 
-        for pat in subpattern:
-            if fnmatch.fnmatch(value, pat):
-            #if pathlib.PurePosixPath(value).match(pat):
+        #pattern = pathlib.PurePosixPath(pattern)
+        #value = pathlib.PurePosixPath(value)
+        value = value.as_posix()
+
+        path_parts = value.split('/')
+        pathlen = len(path_parts)
+        pattern_ = pathlib.PurePath(pattern).as_posix()
+        pattern_parts = pattern_.split('/')
+        patternlen = len(pattern_parts)
+        if patternlen > pathlen:
+            return MatchResult.NO_MATCH
+
+        matched = False
+        if pathlen == 1:
+            if is_dir: 
+                return MatchResult.NO_MATCH
+            else:
+                if pathlib.PurePath(path_parts[0]).match(pattern_parts[0]):
+                    matched = True
+        else:
+            pathpart_start_index = 0
+            path_part_endindex = 0 if root_only else pathlen - patternlen - (1 if is_dir else 0)
+            possible_match = False
+            for i in range(pathpart_start_index, path_part_endindex + 1):
+                for j in range(patternlen):
+                    if pathlib.PurePath(path_parts[i + j]).match(pattern_parts[j]):
+                        possible_match = True
+                        continue  # inner for loop
+                    else:
+                        possible_match = False
+                        break  # inner for loop
+                if possible_match:
+                    # full pattern matched
+                    break
+            if possible_match:
                 matched = True
-                break
+
+        
+        # for pat in subpattern:
+        #     #if fnmatch.fnmatch(value, pat):
+        #     if pathlib.PurePath(value).match(str(pat)):
+        #         matched = True
+        #         break
 
         if matched:
             if negate:
@@ -127,10 +179,12 @@ class PyGitIgnore:
         return False
 
     def flist(self, sourcedir):
-        for path in pathlib.Path(sourcedir).rglob('*'):
-            if path.is_dir():
+        parent = pathlib.Path(sourcedir)
+        for realpath in pathlib.Path(sourcedir).rglob('*'):
+            if realpath.is_dir():
                 # only return files, not dirs
                 continue
+            path = realpath.relative_to(parent)
             ignored_file = False
             for p in self._patterns:
                 match_result = self.match(p, path)
@@ -148,7 +202,7 @@ class PyGitIgnore:
             else:
                 file_include = False
             if file_include:
-                yield path.relative_to(sourcedir)
+                yield path
 
     def package_filter(self, path):
         file_include = True
