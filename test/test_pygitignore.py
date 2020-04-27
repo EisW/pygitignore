@@ -4,8 +4,8 @@ import pytest
 import sys
 
 
-patterntestlist = ['{:03d}'.format(i) for i in range(19) if i not in [1,2, 16]]
-
+#patterntestlist = ['{:03d}'.format(i) for i in range(19) if i not in [1,2, 16]]
+patterntestlist = ['{:03d}'.format(i) for i in range(19)]
 
 @pytest.mark.parametrize('patterntest', patterntestlist)
 def test_match(patterntest):

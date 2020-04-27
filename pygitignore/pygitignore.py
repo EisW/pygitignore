@@ -64,35 +64,22 @@ class PyGitIgnore:
 
         # todo: replace '[...]' expressions
 
-        # Two consecutive asterisks ("**") in patterns matched
-        # against full pathname may have special meaning:
-        if pattern.find(self.dblAsterisks) != -1:
-            raise ValueError('double asterisk not supported yet')
-            if pathlib.Path(value).match(pattern):
-                pmatch = True
-            else:
-                pmatch = False
-            res = not pmatch if negate else pmatch
-            if res:
-                if is_dir:
-                    return MatchResult.IGNORED_DIR
-                else:
-                    return MatchResult.IGNORED_FILE
-            else:
-                return MatchResult.EXPLICITE_INCLUDED
-
         root_only = False
 
-        if pattern.startswith('/'):
-            root_only = True
-            pattern = pattern[1:]
-
-        if pattern.endswith('/'):
-            if pattern[:-1].find('/') != -1:
-                root_only = True
+        if pattern.startswith('**/'):
+            root_only = False
+            pattern = pattern.replace('**/', '')
         else:
-            if pattern.find('/') != -1:
+            if pattern.startswith('/'):
                 root_only = True
+                pattern = pattern[1:]
+
+            if pattern.endswith('/'):
+                if pattern[:-1].find('/') != -1:
+                    root_only = True
+            else:
+                if pattern.find('/') != -1:
+                    root_only = True
 
         value = value.as_posix()
 
